@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17
+
+    container_name: beeone-postgres
+
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: beeone_app
+      POSTGRES_PASSWORD: bb19055
+      POSTGRES_DB: beeone
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
