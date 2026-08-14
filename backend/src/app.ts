@@ -10,10 +10,10 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 
-app.get("/", (req, res) => {
+app.get("/api/health", (req, res) => {
   res.json({
-    success: true,
-    message: "BeeOne API is running",
+    status: "ok",
+    message: "BeeOne API is running"
   });
 });
 

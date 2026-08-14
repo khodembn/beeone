@@ -5,9 +5,429 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// =====================================================
+// ENUMS
+// =====================================================
+
+enum UserRole {
+  BEEKEEPER
+  ADMIN
+}
+
+enum HiveType {
+  LANGSTROTH
+  NAJAFABADI
+  DADANT
+  TRADITIONAL
+  FOAM
+  OTHER
+}
+
+enum HiveStatus {
+  ACTIVE
+  INACTIVE
+  MOVED
+  MERGED
+  DESTROYED
+}
+
+enum FrameType {
+  BROOD
+  HONEY
+  POLLEN
+  EMPTY
+  DRAWN_COMB
+  FOUNDATION
+  OTHER
+}
+
+enum QueenBreed {
+  CARNIOLAN
+  ITALIAN
+  CAUCASIAN
+  BUCKFAST
+  IRANIAN_NATIVE
+  OTHER
+}
+
+enum QueenStatus {
+  ACTIVE
+  REPLACED
+  LOST
+  DEAD
+}
+
+enum PopulationStatus {
+  WEAK
+  MEDIUM
+  STRONG
+  VERY_STRONG
+}
+
+enum FeedType {
+  SUGAR_SYRUP
+  HONEY
+  SWEET_DOUGH
+  PROTEIN_PATTY
+  POLLEN
+  WATER
+  SUPPLEMENT
+  OTHER
+}
+
+enum FeedUnit {
+  LITER
+  MILLILITER
+  KILOGRAM
+  GRAM
+}
+
+enum DiseaseType {
+  AMERICAN_FOULBROOD
+  EUROPEAN_FOULBROOD
+  VARROA
+  NOSEMA
+  CHALKBROOD
+  SACBROOD
+  VIRAL_DISEASE
+  TRACHEAL_MITE
+  WAX_MOTH
+  MALNUTRITION
+  POISONING
+  BEE_EATER
+  OTHER
+}
+
+enum DiseaseSeverity {
+  MILD
+  MODERATE
+  SEVERE
+  CRITICAL
+}
+
+enum TreatmentStatus {
+  IN_PROGRESS
+  COMPLETED
+  STOPPED
+}
+
+enum DosageUnit {
+  MILLILITER
+  LITER
+  GRAM
+  KILOGRAM
+  TABLET
+  CAPSULE
+  DROP
+  SPOON
+  OTHER
+}
+
+enum HoneyHarvestUnit {
+  KILOGRAM
+  GRAM
+}
+
+// =====================================================
+// USER
+// =====================================================
+
+model User {
+  id           String   @id @default(uuid())
+
+  fullName     String
+
+  email        String?  @unique
+  phoneNumber  String   @unique
+
+  passwordHash String
+
+  role         UserRole @default(BEEKEEPER)
+
+  apiaries      Apiary[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("users")
+}
+
+// =====================================================
+// APIARY
+// =====================================================
+
+model Apiary {
+  id          String  @id @default(uuid())
+  name        String
+  location    String
+  latitude    Decimal @db.Decimal(10, 7)
+  longitude   Decimal @db.Decimal(10, 7)
+  description String?
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  hives Hive[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@map("apiaries")
+}
+
+// =====================================================
+// HIVE
+// =====================================================
+
+model Hive {
+  id               String     @id @default(uuid())
+  hiveNumber       String
+  hiveType         HiveType
+  hiveStatus       HiveStatus @default(ACTIVE)
+  installationDate DateTime?
+  notes            String?
+
+  apiaryId String
+  apiary   Apiary @relation(fields: [apiaryId], references: [id], onDelete: Cascade)
+
+  frames   HiveFrame[]
+  queens   Queen[]
+  visits   HiveVisit[]
+  harvests HoneyHarvest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([apiaryId, hiveNumber])
+  @@index([apiaryId])
+  @@index([hiveStatus])
+  @@map("hives")
+}
+
+// =====================================================
+// HIVE FRAME
+// =====================================================
+
+model HiveFrame {
+  id          String    @id @default(uuid())
+  frameType   FrameType
+  customFrame String?
+  count       Int
+
+  hiveId String
+  hive   Hive   @relation(fields: [hiveId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([hiveId, frameType])
+  @@index([hiveId])
+  @@map("hive_frames")
+}
+
+// =====================================================
+// QUEEN
+// =====================================================
+
+model Queen {
+  id           String      @id @default(uuid())
+  breed        QueenBreed
+  customBreed  String?
+  birthDate    DateTime?
+  introducedAt DateTime    @default(now())
+  endedAt      DateTime?
+  status       QueenStatus @default(ACTIVE)
+  notes        String?
+
+  hiveId String
+  hive   Hive   @relation(fields: [hiveId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hiveId])
+  @@index([status])
+  @@map("queens")
+}
+
+// =====================================================
+// HIVE VISIT
+// =====================================================
+
+model HiveVisit {
+  id String @id @default(uuid())
+
+  // Date of the visit
+  visitDate DateTime @db.Date
+
+  // Exact time of the visit
+  visitedAt DateTime @default(now())
+
+  hasQueen  Boolean @default(false)
+  hasNectar Boolean @default(false)
+  hasPollen Boolean @default(false)
+  hasFeed   Boolean @default(false)
+  hasEggs   Boolean @default(false)
+  hasLarvae Boolean @default(false)
+  hasPupae  Boolean @default(false)
+
+  populationStatus PopulationStatus?
+
+  hasDisease Boolean @default(false)
+  notes      String?
+
+  hiveId String
+  hive   Hive   @relation(fields: [hiveId], references: [id], onDelete: Cascade)
+
+  feedings Feeding[]
+  diseases Disease[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // One visit per hive per day
+  @@unique([hiveId, visitDate])
+  @@index([hiveId])
+  @@index([visitDate])
+  @@map("hive_visits")
+}
+
+// =====================================================
+// FEEDING
+// =====================================================
+
+model Feeding {
+  id String @id @default(uuid())
+
+  feedType       FeedType
+  customFeedType String?
+
+  amount Decimal  @db.Decimal(10, 2)
+  unit   FeedUnit
+
+  notes String?
+
+  hiveVisitId String
+  hiveVisit   HiveVisit @relation(fields: [hiveVisitId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hiveVisitId])
+  @@map("feedings")
+}
+
+// =====================================================
+// DISEASE
+// =====================================================
+
+model Disease {
+  id String @id @default(uuid())
+
+  diseaseType   DiseaseType
+  customDisease String?
+
+  severity DiseaseSeverity
+
+  symptoms      String?
+  notes         String?
+  diagnosisDate DateTime @db.Date
+  isActive      Boolean  @default(true)
+
+  // Disease belongs to a specific hive visit
+  hiveVisitId String
+  hiveVisit   HiveVisit @relation(fields: [hiveVisitId], references: [id], onDelete: Cascade)
+
+  photos     DiseasePhoto[]
+  treatments Treatment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hiveVisitId])
+  @@index([diseaseType])
+  @@index([isActive])
+  @@index([diagnosisDate])
+  @@map("diseases")
+}
+
+// =====================================================
+// DISEASE PHOTO
+// =====================================================
+
+model DiseasePhoto {
+  id String @id @default(uuid())
+
+  imageUrl String
+  caption  String?
+
+  diseaseId String
+  disease   Disease @relation(fields: [diseaseId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([diseaseId])
+  @@map("disease_photos")
+}
+
+// =====================================================
+// TREATMENT
+// =====================================================
+
+model Treatment {
+  id String @id @default(uuid())
+
+  medicineName String
+
+  dosage     Decimal    @db.Decimal(10, 2)
+  dosageUnit DosageUnit
+
+  startDate DateTime  @db.Date
+  endDate   DateTime? @db.Date
+
+  status TreatmentStatus @default(IN_PROGRESS)
+
+  notes String?
+
+  diseaseId String
+  disease   Disease @relation(fields: [diseaseId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([diseaseId])
+  @@index([status])
+  @@map("treatments")
+}
+
+// =====================================================
+// HONEY HARVEST
+// =====================================================
+
+model HoneyHarvest {
+  id String @id @default(uuid())
+
+  amount Decimal          @db.Decimal(10, 2)
+  unit   HoneyHarvestUnit
+
+  harvestDate DateTime @db.Date
+  notes       String?
+
+  hiveId String
+  hive   Hive   @relation(fields: [hiveId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hiveId])
+  @@index([harvestDate])
+  @@map("honey_harvests")
 }
