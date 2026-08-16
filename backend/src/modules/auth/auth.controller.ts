@@ -46,5 +46,24 @@ async login(
   } catch (error) {
     next(error);
   }
-}
+},
+
+async changePassword(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const userId = req.user!.userId;
+
+    const result = await authService.changePassword(
+      userId,
+      req.body
+    );
+
+    return res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+},
 };

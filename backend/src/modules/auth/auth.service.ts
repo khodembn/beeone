@@ -1,6 +1,7 @@
 import { RegisterDto } from "./dto/register.dto.js";
 import { LoginDto } from "./dto/login.dto.js";
 import { authRepository } from "./auth.repository.js";
+import { ChangePasswordDto } from "./dto/change-password.dto.js";
 import {
   hashPassword,
   comparePassword,
@@ -65,4 +66,38 @@ export const authService = {
      token,
     };
   },
+
+ async changePassword(
+  userId: string,
+  data: ChangePasswordDto
+) {
+  const user = await authRepository.findById(userId);
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const isCurrentPasswordValid = await comparePassword(
+    data.currentPassword,
+    user.passwordHash
+  );
+
+  if (!isCurrentPasswordValid) {
+    throw new Error("Current password is incorrect");
+  }
+
+  const newPasswordHash = await hashPassword(
+    data.newPassword
+  );
+
+  await authRepository.updatePassword(
+    userId,
+    newPasswordHash
+  );
+
+  return {
+    message: "Password changed successfully",
+  };
+},
 };
+
