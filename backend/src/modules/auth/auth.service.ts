@@ -1,103 +1,139 @@
 import { RegisterDto } from "./dto/register.dto.js";
 import { LoginDto } from "./dto/login.dto.js";
-import { authRepository } from "./auth.repository.js";
 import { ChangePasswordDto } from "./dto/change-password.dto.js";
+import { authRepository } from "./auth.repository.js";
+
 import {
   hashPassword,
   comparePassword,
 } from "../../utils/password.js";
+
 import { generateToken } from "../../utils/jwt.js";
+import { AppError } from "../../utils/app-error.js";
+
 
 export const authService = {
-  async register(data: RegisterDto) {
-    const existingUser = await authRepository.findByIdentifier(
-      data.phoneNumber
-    );
 
-    if (existingUser) {
-      throw new Error("Phone number is already registered");
+  // Register
+  async register(data: RegisterDto) {
+
+    const existingPhone =
+      await authRepository.findByIdentifier(data.phoneNumber);
+
+    if (existingPhone) {
+      throw new AppError(
+        "Phone number is already registered",
+        409
+      );
     }
 
     if (data.email) {
-      const existingEmail = await authRepository.findByIdentifier(
-        data.email
-      );
+      const existingEmail =
+        await authRepository.findByIdentifier(data.email);
 
       if (existingEmail) {
-        throw new Error("Email is already registered");
+        throw new AppError(
+          "Email is already registered",
+          409
+        );
       }
     }
 
-    const passwordHash = await hashPassword(data.password);
+    const passwordHash =
+      await hashPassword(data.password);
 
-    const user = await authRepository.createUser({
-      fullName: data.fullName,
-      phoneNumber: data.phoneNumber,
-      email: data.email,
-      passwordHash,
-    });
+    const user =
+      await authRepository.createUser({
+        fullName: data.fullName,
+        phoneNumber: data.phoneNumber,
+        email: data.email,
+        passwordHash,
+      });
 
     return user;
   },
 
+
+  // Login
   async login(data: LoginDto) {
-    const user = await authRepository.findByIdentifier(
-      data.identifier
-    );
+
+    const user =
+      await authRepository.findByIdentifier(
+        data.identifier
+      );
 
     if (!user) {
-      throw new Error("Invalid email/phone number or password");
+      throw new AppError(
+        "Invalid email/phone number or password",
+        401
+      );
     }
 
-    const isPasswordValid = await comparePassword(
-      data.password,
-      user.passwordHash
-    );
+    const isPasswordValid =
+      await comparePassword(
+        data.password,
+        user.passwordHash
+      );
 
     if (!isPasswordValid) {
-      throw new Error("Invalid email/phone number or password");
+      throw new AppError(
+        "Invalid email/phone number or password",
+        401
+      );
     }
- const token = generateToken({
-      userId: user.id,
-      role: user.role,
-    });
-    return {   
-     user,
-     token,
+
+    const token =
+      generateToken({
+        userId: user.id,
+        role: user.role,
+      });
+
+    return {
+      user,
+      token,
     };
   },
 
- async changePassword(
-  userId: string,
-  data: ChangePasswordDto
-) {
-  const user = await authRepository.findById(userId);
 
-  if (!user) {
-    throw new Error("User not found");
-  }
+  // Change password
+  async changePassword(
+    userId: string,
+    data: ChangePasswordDto
+  ) {
 
-  const isCurrentPasswordValid = await comparePassword(
-    data.currentPassword,
-    user.passwordHash
-  );
+    const user =
+      await authRepository.findById(userId);
 
-  if (!isCurrentPasswordValid) {
-    throw new Error("Current password is incorrect");
-  }
+    if (!user) {
+      throw new AppError(
+        "User not found",
+        404
+      );
+    }
 
-  const newPasswordHash = await hashPassword(
-    data.newPassword
-  );
+    const isCurrentPasswordValid =
+      await comparePassword(
+        data.currentPassword,
+        user.passwordHash
+      );
 
-  await authRepository.updatePassword(
-    userId,
-    newPasswordHash
-  );
+    if (!isCurrentPasswordValid) {
+      throw new AppError(
+        "Current password is incorrect",
+        401
+      );
+    }
 
-  return {
-    message: "Password changed successfully",
-  };
-},
+    const newPasswordHash =
+      await hashPassword(data.newPassword);
+
+    await authRepository.updatePassword(
+      userId,
+      newPasswordHash
+    );
+
+    return {
+      message: "Password changed successfully",
+    };
+  },
 };
-

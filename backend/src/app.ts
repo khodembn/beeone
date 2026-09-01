@@ -5,6 +5,7 @@ import morgan from "morgan";
 import authRoutes from "./modules/auth/auth.routes.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import { userRoutes } from "./modules/user/index.js";
+import apiaryRoutes from "./modules/apiary/apiary.routes.js";
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/apiaries", apiaryRoutes);
 
 app.use(errorHandler);
 export default app;
