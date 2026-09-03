@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+
 import { AppError } from "../utils/app-error.js";
 
 export const errorHandler = (
@@ -9,6 +10,13 @@ export const errorHandler = (
 ) => {
 
   console.error(err);
+  // Prisma Unique Constraint Error
+  if ("code" in err && err.code === "P2002") {
+    return res.status(409).json({
+      success: false,
+      message: "A record with this value already exists",
+    });
+  }
 
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
