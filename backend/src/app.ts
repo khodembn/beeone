@@ -7,6 +7,8 @@ import { errorHandler } from "./middlewares/error.middleware.js";
 import { userRoutes } from "./modules/user/index.js";
 import apiaryRoutes from "./modules/apiary/apiary.routes.js";
 import hiveRoutes from "./modules/hive/hive.routes.js";
+import hiveFrameRoutes from "./modules/hive-frame/hive-frame.routes.js";
+
 
 const app = express();
 
@@ -26,6 +28,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/apiaries", apiaryRoutes);
 app.use("/api", hiveRoutes);
+app.use("/api", hiveFrameRoutes);
 
 app.use(errorHandler);
 export default app;
