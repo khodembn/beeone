@@ -8,7 +8,7 @@ import { userRoutes } from "./modules/user/index.js";
 import apiaryRoutes from "./modules/apiary/apiary.routes.js";
 import hiveRoutes from "./modules/hive/hive.routes.js";
 import hiveFrameRoutes from "./modules/hive-frame/hive-frame.routes.js";
-
+import queenRoutes from "./modules/queen/queen.routes.js";
 
 const app = express();
 
@@ -29,6 +29,15 @@ app.use("/api/users", userRoutes);
 app.use("/api/apiaries", apiaryRoutes);
 app.use("/api", hiveRoutes);
 app.use("/api", hiveFrameRoutes);
+app.use("/api", queenRoutes);
 
+
+
+app.use((req, res) => {
+  return res.status(404).json({
+    success: false,
+    message: "Route not found",
+  });
+});
 app.use(errorHandler);
 export default app;
