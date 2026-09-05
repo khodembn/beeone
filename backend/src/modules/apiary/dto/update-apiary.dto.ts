@@ -16,14 +16,14 @@ export const updateApiarySchema = z
 
     latitude: z
       .number()
-      .min(-90, "Latitude must be between -90 and 90")
-      .max(90, "Latitude must be between -90 and 90")
+      .min(25, "Latitude must be between -90 and 90")
+      .max(40, "Latitude must be between -90 and 90")
       .optional(),
 
     longitude: z
       .number()
-      .min(-180, "Longitude must be between -180 and 180")
-      .max(180, "Longitude must be between -180 and 180")
+      .min(44, "Longitude must be between -180 and 180")
+      .max(64, "Longitude must be between -180 and 180")
       .optional(),
 
     description: z
