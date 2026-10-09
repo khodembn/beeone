@@ -40,20 +40,14 @@ export const queenService = {
     ownerId: string,
     data: CreateQueenDto
   ) {
-    await getOwnedHive(
-      hiveId,
-      ownerId
-    );
+    await getOwnedHive(hiveId, ownerId);
 
-    const finalStatus =
-      data.status ?? "ACTIVE";
+    const finalStatus = data.status ?? "ACTIVE";
 
     // Only one ACTIVE Queen per Hive
     if (finalStatus === "ACTIVE") {
       const activeQueen =
-        await queenRepository.findActiveByHiveId(
-          hiveId
-        );
+        await queenRepository.findActiveByHiveId(hiveId);
 
       if (activeQueen) {
         throw new AppError(
@@ -74,14 +68,9 @@ export const queenService = {
     hiveId: string,
     ownerId: string
   ) {
-    await getOwnedHive(
-      hiveId,
-      ownerId
-    );
+    await getOwnedHive(hiveId, ownerId);
 
-    return queenRepository.findAllByHiveId(
-      hiveId
-    );
+    return queenRepository.findAllByHiveId(hiveId);
   },
 
   // Get one
@@ -90,9 +79,7 @@ export const queenService = {
     ownerId: string
   ) {
     const queen =
-      await queenRepository.findById(
-        queenId
-      );
+      await queenRepository.findById(queenId);
 
     if (!queen) {
       throw new AppError(
@@ -116,9 +103,7 @@ export const queenService = {
     data: UpdateQueenDto
   ) {
     const queen =
-      await queenRepository.findById(
-        queenId
-      );
+      await queenRepository.findById(queenId);
 
     if (!queen) {
       throw new AppError(
@@ -132,14 +117,20 @@ export const queenService = {
       ownerId
     );
 
+    // Final values after merging
+    // existing values with PATCH values
     const finalBreed =
       data.breed ?? queen.breed;
+
+    const finalCustomBreed =
+      finalBreed === "OTHER"
+      ? data.customBreed ?? queen.customBreed
+      : undefined;
+
 
     const finalStatus =
       data.status ?? queen.status;
 
-    // Final dates after merging
-    // existing values with PATCH values
     const finalBirthDate =
       data.birthDate ?? queen.birthDate;
 
@@ -149,14 +140,36 @@ export const queenService = {
     const finalEndedAt =
       data.endedAt ?? queen.endedAt;
 
-    // endedAt cannot be before introducedAt
+    // OTHER → customBreed is required
+  if (
+    finalBreed !== "OTHER" &&
+    data.customBreed !== undefined
+    ) {   
+    throw new AppError(
+      "Custom breed is only allowed when breed is OTHER",
+      400
+    );
+  }
+
+    // Non-OTHER → customBreed is not allowed
     if (
-      finalEndedAt &&
-      finalIntroducedAt &&
-      finalEndedAt < finalIntroducedAt
+      finalBreed !== "OTHER" &&
+      finalCustomBreed
     ) {
       throw new AppError(
-        "Ended date cannot be before introduced date",
+        "Custom breed is only allowed when breed is OTHER",
+        400
+      );
+    }
+
+    // introducedAt cannot be before birthDate
+    if (
+      finalIntroducedAt &&
+      finalBirthDate &&
+      finalIntroducedAt < finalBirthDate
+    ) {
+      throw new AppError(
+        "Introduced date cannot be before birth date",
         400
       );
     }
@@ -173,25 +186,14 @@ export const queenService = {
       );
     }
 
-    // OTHER → customBreed is required
+    // endedAt cannot be before introducedAt
     if (
-      finalBreed === "OTHER" &&
-      data.customBreed === undefined &&
-      !queen.customBreed
+      finalEndedAt &&
+      finalIntroducedAt &&
+      finalEndedAt < finalIntroducedAt
     ) {
       throw new AppError(
-        "Custom breed is required when breed is OTHER",
-        400
-      );
-    }
-
-    // Non-OTHER → customBreed is not allowed
-    if (
-      finalBreed !== "OTHER" &&
-      data.customBreed !== undefined
-    ) {
-      throw new AppError(
-        "Custom breed is only allowed when breed is OTHER",
+        "Ended date cannot be before introduced date",
         400
       );
     }
@@ -239,9 +241,7 @@ export const queenService = {
     ownerId: string
   ) {
     const queen =
-      await queenRepository.findById(
-        queenId
-      );
+      await queenRepository.findById(queenId);
 
     if (!queen) {
       throw new AppError(
@@ -255,9 +255,7 @@ export const queenService = {
       ownerId
     );
 
-    await queenRepository.delete(
-      queenId
-    );
+    await queenRepository.delete(queenId);
 
     return {
       message: "Queen deleted successfully",

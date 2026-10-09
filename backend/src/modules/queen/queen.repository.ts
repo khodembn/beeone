@@ -1,56 +1,18 @@
 import prisma from "../../lib/prisma.js";
+import { Prisma } from "../../generated/prisma/client.js";
 
 export const queenRepository = {
   // Create Queen
-
-  async create(data: {
-    breed:
-      | "CARNIOLAN"
-      | "ITALIAN"
-      | "CAUCASIAN"
-      | "BUCKFAST"
-      | "IRANIAN_NATIVE"
-      | "OTHER";
-
-    customBreed?: string;
-
-    birthDate?: Date;
-
-    introducedAt?: Date;
-
-    endedAt?: Date;
-
-    status?:
-      | "ACTIVE"
-      | "REPLACED"
-      | "LOST"
-      | "DEAD";
-
-    notes?: string;
-
-    hiveId: string;
-  }) {
+  async create(data: Prisma.QueenUncheckedCreateInput) {
     return prisma.queen.create({
-      data: {
-        breed: data.breed,
-        customBreed: data.customBreed,
-        birthDate: data.birthDate,
-        introducedAt: data.introducedAt,
-        endedAt: data.endedAt,
-        status: data.status,
-        notes: data.notes,
-        hiveId: data.hiveId,
-      },
+      data,
     });
   },
 
   // Get all Queens of a Hive
-
   async findAllByHiveId(hiveId: string) {
     return prisma.queen.findMany({
-      where: {
-        hiveId,
-      },
+      where: { hiveId },
       orderBy: {
         createdAt: "desc",
       },
@@ -58,17 +20,13 @@ export const queenRepository = {
   },
 
   // Get one Queen
-
   async findById(id: string) {
     return prisma.queen.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
     });
   },
 
   // Find active Queen of a Hive
-
   async findActiveByHiveId(hiveId: string) {
     return prisma.queen.findFirst({
       where: {
@@ -79,50 +37,20 @@ export const queenRepository = {
   },
 
   // Update Queen
-
   async update(
     id: string,
-    data: {
-      breed?:
-        | "CARNIOLAN"
-        | "ITALIAN"
-        | "CAUCASIAN"
-        | "BUCKFAST"
-        | "IRANIAN_NATIVE"
-        | "OTHER";
-
-      customBreed?: string | null;
-
-      birthDate?: Date;
-
-      introducedAt?: Date;
-
-      endedAt?: Date | null;
-
-      status?:
-        | "ACTIVE"
-        | "REPLACED"
-        | "LOST"
-        | "DEAD";
-
-      notes?: string;
-    }
+    data: Prisma.QueenUpdateInput
   ) {
     return prisma.queen.update({
-      where: {
-        id,
-      },
+      where: { id },
       data,
     });
   },
 
   // Delete Queen
-
   async delete(id: string) {
     return prisma.queen.delete({
-      where: {
-        id,
-      },
+      where: { id },
     });
   },
 };

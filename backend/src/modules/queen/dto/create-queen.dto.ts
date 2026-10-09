@@ -15,7 +15,10 @@ export const createQueenSchema = z
       .string()
       .trim()
       .min(1, "Custom breed is required")
-      .max(100, "Custom breed must be at most 100 characters")
+      .max(
+        100,
+        "Custom breed must be at most 100 characters"
+      )
       .optional(),
 
     birthDate: z.coerce.date().optional(),
@@ -36,16 +39,23 @@ export const createQueenSchema = z
     notes: z
       .string()
       .trim()
-      .max(1000, "Notes must be at most 1000 characters")
+      .max(
+        1000,
+        "Notes must be at most 1000 characters"
+      )
       .optional(),
   })
   .superRefine((data, ctx) => {
     // OTHER → customBreed is required
-    if (data.breed === "OTHER" && !data.customBreed) {
+    if (
+      data.breed === "OTHER" &&
+      !data.customBreed
+    ) {
       ctx.addIssue({
         code: "custom",
         path: ["customBreed"],
-        message: "Custom breed is required when breed is OTHER",
+        message:
+          "Custom breed is required when breed is OTHER",
       });
     }
 
@@ -57,20 +67,22 @@ export const createQueenSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["customBreed"],
-        message: "Custom breed is only allowed when breed is OTHER",
+        message:
+          "Custom breed is only allowed when breed is OTHER",
       });
     }
 
-    // endedAt cannot be before introducedAt
+    // introducedAt cannot be before birthDate
     if (
-      data.endedAt &&
       data.introducedAt &&
-      data.endedAt < data.introducedAt
+      data.birthDate &&
+      data.introducedAt < data.birthDate
     ) {
       ctx.addIssue({
         code: "custom",
-        path: ["endedAt"],
-        message: "Ended date cannot be before introduced date",
+        path: ["introducedAt"],
+        message:
+          "Introduced date cannot be before birth date",
       });
     }
 
@@ -83,7 +95,22 @@ export const createQueenSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["endedAt"],
-        message: "Ended date cannot be before birth date",
+        message:
+          "Ended date cannot be before birth date",
+      });
+    }
+
+    // endedAt cannot be before introducedAt
+    if (
+      data.endedAt &&
+      data.introducedAt &&
+      data.endedAt < data.introducedAt
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["endedAt"],
+        message:
+          "Ended date cannot be before introduced date",
       });
     }
   });

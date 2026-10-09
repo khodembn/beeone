@@ -113,7 +113,7 @@ export const queenController = {
       const queenId =
         req.params.id as string;
 
-      // Validation is handled by validate middleware
+
 
       const queen =
         await queenService.updateQueen(
