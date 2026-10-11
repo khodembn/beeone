@@ -352,10 +352,12 @@ model Disease {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+ 
   @@index([hiveVisitId])
   @@index([diseaseType])
   @@index([isActive])
   @@index([diagnosisDate])
+  @@unique([hiveVisitId, diseaseType])
   @@map("diseases")
 }
 

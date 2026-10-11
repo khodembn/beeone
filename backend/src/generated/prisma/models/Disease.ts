@@ -254,6 +254,7 @@ export type DiseaseOrderByWithRelationInput = {
 
 export type DiseaseWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  hiveVisitId_diseaseType?: Prisma.DiseaseHiveVisitIdDiseaseTypeCompoundUniqueInput
   AND?: Prisma.DiseaseWhereInput | Prisma.DiseaseWhereInput[]
   OR?: Prisma.DiseaseWhereInput[]
   NOT?: Prisma.DiseaseWhereInput | Prisma.DiseaseWhereInput[]
@@ -270,7 +271,7 @@ export type DiseaseWhereUniqueInput = Prisma.AtLeast<{
   hiveVisit?: Prisma.XOR<Prisma.HiveVisitScalarRelationFilter, Prisma.HiveVisitWhereInput>
   photos?: Prisma.DiseasePhotoListRelationFilter
   treatments?: Prisma.TreatmentListRelationFilter
-}, "id">
+}, "id" | "hiveVisitId_diseaseType">
 
 export type DiseaseOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -419,6 +420,11 @@ export type DiseaseListRelationFilter = {
 
 export type DiseaseOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type DiseaseHiveVisitIdDiseaseTypeCompoundUniqueInput = {
+  hiveVisitId: string
+  diseaseType: $Enums.DiseaseType
 }
 
 export type DiseaseCountOrderByAggregateInput = {
